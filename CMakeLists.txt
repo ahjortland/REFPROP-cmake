@@ -349,7 +349,11 @@ if (REFPROP_VERSION)
 endif()
 
 set_target_properties(${NAME} PROPERTIES APPEND_STRING PROPERTY LINK_FLAGS "${REFPROP_LINK_FLAGS} ${REFPROP_ADDITIONAL_LINK_FLAGS}")
-target_include_directories(${NAME} PUBLIC "${REFPROP_FORTRAN_ABS_PATH}")
+#target_include_directories(${NAME} PUBLIC "${REFPROP_FORTRAN_ABS_PATH}")
+target_include_directories(${NAME} PUBLIC 
+  $<BUILD_INTERFACE:${REFPROP_FORTRAN_ABS_PATH}>
+  $<INSTALL_INTERFACE:include>
+)
 
 if (NOT REFPROP_NO_NUMPY AND (NOT REFPROP_NO_PYTHON))
   if (NOT EXISTS ${PYTHON_EXECUTABLE})
@@ -384,3 +388,31 @@ if (NOT REFPROP_NO_NUMPY AND (NOT REFPROP_NO_PYTHON))
                       REFPROP.h.stamp
                     )
 endif()
+
+##########################
+#     INSTALL TARGET     #
+##########################
+
+# Add installation rules for the REFPROP library and headers.
+
+# Install the REFPROP library.
+install(TARGETS ${NAME}
+  EXPORT refpropTargets
+  ARCHIVE DESTINATION lib 
+  LIBRARY DESTINATION lib 
+  RUNTIME DESTINATION bin 
+)
+
+# Install the REFPROP.h header file if it's generated.
+if (NOT REFPROP_NO_NUMPY AND (NOT REFPROP_NO_PYTHON))
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/REFPROP.h"
+          DESTINATION include 
+          COMPONENT dev)
+endif()
+
+# Export the REFPROP targets for use with find_package
+install(EXPORT refpropTargets
+        FILE refpropTargets.cmake 
+        NAMESPACE refprop:: 
+        DESTINATION lib/cmake/refprop 
+)
